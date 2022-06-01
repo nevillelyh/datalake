@@ -1,0 +1,3 @@
+[submodule "data/trino-the-definitive-guide"]
+	path = data/trino-the-definitive-guide
+	url = git@github.com:trinodb/trino-the-definitive-guide.git

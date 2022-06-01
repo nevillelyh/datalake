@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -euo pipefail
+
+bindir="$(dirname "$(readlink -f "$0")")"
+basedir="$(readlink -f "$bindir/..")"
+
+cd "$basedir"
+docker compose down
+git clean -dffx data

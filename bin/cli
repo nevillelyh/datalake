@@ -1,0 +1,87 @@
+#!/bin/bash
+
+set -euo pipefail
+
+bin="$(basename "$0")"
+bindir="$(dirname "$(readlink -f "$0")")"
+basedir="$(readlink -f "$bindir/..")"
+project="$(basename "$basedir")"
+net="${project}_default"
+ts=$(date '+%Y%m%d%H%M%S')
+
+help() {
+    echo "Usage: $bin <bash|cli> ..."
+    exit 1
+}
+
+metastore_cli() {
+    service="$1"
+    shift
+    tag="${project}_hive:latest"
+    mkdir "$basedir/.beeline"
+    jdbc="jdbc:mysql://mysql-$service.datalake.io/metastore"
+    docker run -it --rm --name "metastore-$service-cli-$ts" --network "$net" \
+        --volume "$basedir/data/cli:/tmp/cli:ro" \
+        --volume "$basedir/.beeline:/home/hive/.beeline:rw" \
+        "$tag" \
+        hive/bin/beeline -u "$jdbc" -n metastore -p metastorepass "$@"
+}
+
+metastore-hive_cli() {
+    metastore_cli hive "$@"
+}
+
+metastore-iceberg_cli() {
+    metastore_cli iceberg "$@"
+}
+
+mysql_cli() {
+    tag="mysql:latest"
+    docker run -it --rm --name "mysql-cli-$ts" --network "$net" \
+        --volume "$basedir/data/cli:/tmp/cli:ro" \
+        --volume "$basedir:/home/datalake:rw" \
+        --user "$(id --user)" \
+        --env HOME=/home/datalake \
+        --workdir /home/datalake \
+        "$tag" \
+        mysql --host="mysql.datalake.io" \
+        --user=root --password=mysqlpass \
+        "$@"
+}
+
+trino_cli() {
+    user=${TRINO_USER:-trino}
+    pass="${user}pass"
+    tag="trinodb/trino:latest"
+    touch "$basedir/.trino_history"
+    docker run -it --rm --name "trino-cli-$ts" --network "$net" \
+        --env TRINO_PASSWORD="$pass" \
+        --volume "$basedir/data/cli:/tmp/cli:ro" \
+        --volume "$basedir/.trino_history:/home/trino/.trino_history:rw" \
+        "$tag" \
+        trino --server=https://trino.datalake.io:8443 --insecure \
+        --user="$user" --password "$@"
+}
+
+if [[ "$bin" == "cli" ]]; then
+    echo "Use <service> instead"
+    echo "    services:"
+    find "$bindir" -type l -exec basename {} \; | sort | sed "s/^/        /"
+    exit
+fi
+
+[[ $# -eq 0 ]] && help
+
+case "$1" in
+    bash)
+        shift
+        docker exec -it "$project-$bin-1" /bin/bash "$@"
+        ;;
+    cli)
+        shift
+        "${bin}_cli" "$@"
+        ;;
+    *)
+        help
+        ;;
+esac

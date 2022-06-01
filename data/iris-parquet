@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -euo pipefail
+
+datadir="$(dirname "$(readlink -f "$0")")"
+
+re='1s/^\xEF\xBB\xBF//'
+[[ "$(uname -s)" == "Darwin" ]] && re=$'1s/\xef\xbb\xbf//'
+sed "$re" \
+    "$datadir/trino-the-definitive-guide/iris-data-set/iris-data-set.csv" \
+    > "$datadir/iris/iris.csv"
+parquet-cli csv-schema --record-name table "$datadir/iris/iris.csv" \
+    | sed 's/"double"/"float"/g' > "$datadir/iris/iris.avsc"
+parquet-cli convert-csv --compression-codec ZSTD \
+    --schema "$datadir/iris/iris.avsc" "$datadir/iris/iris.csv" \
+    --output "$datadir/iris/iris.zstd.parquet"

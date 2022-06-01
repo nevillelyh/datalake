@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -euo pipefail
+
+datadir="$(dirname "$(readlink -f "$0")")"
+basedir="$(readlink -f "$datadir/..")"
+bindir="$basedir/bin"
+
+catalogs=(hive iceberg mysql)
+for catalog in "${catalogs[@]}"; do
+    if ! "$bindir/trino" cli --execute="DESCRIBE $catalog.iris.iris" > /dev/null; then
+        echo "Loading table: $catalog.iris.iris"
+        "$bindir/trino" cli --execute="CREATE SCHEMA IF NOT EXISTS $catalog.iris;"
+
+        mkdir -p "$datadir/cli/load"
+        trap 'rm -rf "$datadir/cli/load"' EXIT
+        sql="$datadir/cli/load/$catalog.sql"
+        sed "s/^USE memory.default;$/USE $catalog.iris;/" \
+            "$datadir/trino-the-definitive-guide/iris-data-set/iris-data-set.sql" \
+            > "$sql"
+        "$bindir/trino" cli --file "/tmp/cli/load/$catalog.sql"
+    else
+        echo "Table exists: $catalog.iris.iris"
+    fi
+done
+
+"$datadir/csv2elastic.py" < "$datadir/iris/iris.csv" > "$datadir/iris/iris.json"
+curl --user elastic:elasticpass \
+    -X POST "localhost:9200/iris/_bulk?pretty" \
+    -H "Content-Type: application/json" --data-binary "@$datadir/iris/iris.json"

@@ -1,0 +1,33 @@
+{
+    "catalogs": [
+        {
+            "group": "owner",
+            "allow": "all"
+        },
+        {
+            "group": "hive_owner",
+            "catalog": "hive",
+            "allow": "all"
+        },
+        {
+            "group": "hive_viewer",
+            "catalog": "hive",
+            "allow": "read-only"
+        },
+        {
+            "group": "iceberg_owner",
+            "catalog": "iceberg",
+            "allow": "all"
+        },
+        {
+            "group": "iceberg_viewer",
+            "catalog": "iceberg",
+            "allow": "read-only"
+        },
+        {
+            "group": "elastic_viewer",
+            "catalog": "elastic",
+            "allow": "read-only"
+        }
+    ]
+}

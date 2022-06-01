@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -euo pipefail
+
+export AWS_ACCESS_KEY_ID=datalake-key
+export AWS_SECRET_ACCESS_KEY=datalake-secret
+aws --endpoint-url http://localhost:9000 "$@"

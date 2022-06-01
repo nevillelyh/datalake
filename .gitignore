@@ -1,0 +1,6 @@
+/client/.bsp
+/client/.idea
+/.beeline
+/.mysql_history
+/.trino_history
+target

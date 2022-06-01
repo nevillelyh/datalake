@@ -1,0 +1,30 @@
+{
+  "type" : "record",
+  "name" : "table",
+  "fields" : [ {
+    "name" : "sepal_length_cm",
+    "type" : [ "null", "float" ],
+    "doc" : "Type inferred from '5.1'",
+    "default" : null
+  }, {
+    "name" : "sepal_width_cm",
+    "type" : [ "null", "float" ],
+    "doc" : "Type inferred from '3.5'",
+    "default" : null
+  }, {
+    "name" : "petal_length_cm",
+    "type" : [ "null", "float" ],
+    "doc" : "Type inferred from '1.4'",
+    "default" : null
+  }, {
+    "name" : "petal_width_cm",
+    "type" : [ "null", "float" ],
+    "doc" : "Type inferred from '0.2'",
+    "default" : null
+  }, {
+    "name" : "species",
+    "type" : [ "null", "string" ],
+    "doc" : "Type inferred from 'setosa'",
+    "default" : null
+  } ]
+}
