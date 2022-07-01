@@ -74,6 +74,12 @@ services:
       xpack.security.enabled: true
       discovery.type: single-node
 
+  scylla:
+    image: scylladb/scylla
+    hostname: scylla.datalake.io
+    ports:
+      - 9042:9042
+
   trino:
     image: trinodb/trino:latest
     depends_on:
@@ -86,6 +92,8 @@ services:
       mysql-init:
         condition: service_completed_successfully
       elastic:
+        condition: service_started
+      scylla:
         condition: service_started
     hostname: trino.datalake.io
     ports:

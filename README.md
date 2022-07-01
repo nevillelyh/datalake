@@ -26,6 +26,7 @@ docker compose down
 - metastore-hive - Hive Metastore
 - metastore-iceberg - Iceberg Metastore
 - elastic - Elasticsearch
+- scylla - Scylla
 - trino - Trino
 
 # Scripts
@@ -60,6 +61,7 @@ bin/aws s3 sync --delete s3://datalake s3
 - 3306: mysql
 - 8080: Trino Web UI, HTTP
 - 8443: Trino Web UI, HTTPS
+- 9042: Scylla CQL native transport
 - 9080: Trino JMX RMI registry
 - 9081: Trino JMX RMI server
 - 9200: Elasticsearch HTTP

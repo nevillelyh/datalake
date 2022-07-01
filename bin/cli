@@ -49,6 +49,19 @@ mysql_cli() {
         "$@"
 }
 
+scylla_cli() {
+    tag="scylladb/scylla"
+    docker run -it --rm --name "scylla-cli-$ts" --network "$net" \
+        --volume "$basedir/data/cli:/tmp/cli:ro" \
+        --volume "$basedir:/home/datalake:rw" \
+        --user "$(id --user)" \
+        --env HOME=/home/datalake \
+        --workdir /home/datalake \
+        --entrypoint /bin/bash \
+        "$tag" \
+        cqlsh scylla.datalake.io "$@"
+}
+
 trino_cli() {
     user=${TRINO_USER:-trino}
     pass="${user}pass"
