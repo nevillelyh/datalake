@@ -6,7 +6,7 @@ datadir="$(dirname "$(readlink -f "$0")")"
 basedir="$(readlink -f "$datadir/..")"
 bindir="$basedir/bin"
 
-catalogs=(hive iceberg mysql)
+catalogs=(cassandra elastic hive iceberg mysql)
 for catalog in "${catalogs[@]}"; do
     echo "Querying catalog: $catalog"
     mkdir -p "$datadir/cli/query"
@@ -14,7 +14,9 @@ for catalog in "${catalogs[@]}"; do
     sql="$datadir/cli/query/$catalog.sql"
     re="\<memory.default\>"
     [[ "$(uname -s)" == "Darwin" ]] && re="[[:<:]]memory\.default[[:>:]]"
-    sed "s/$re/$catalog.iris/g" "$datadir/trino-the-definitive-guide/iris-data-set/iris-queries.sql" > "$sql"
+    schema="iris"
+    [[ "$catalog" == "elastic" ]] && schema="default"
+    sed "s/$re/$catalog.$schema/g" "$datadir/trino-the-definitive-guide/iris-data-set/iris-queries.sql" > "$sql"
     "$bindir/trino" cli --file "/tmp/cli/query/$catalog.sql"
     rm "$sql"
 done
