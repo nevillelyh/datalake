@@ -6,7 +6,7 @@ datadir="$(dirname "$(readlink -f "$0")")"
 basedir="$(readlink -f "$datadir/..")"
 bindir="$basedir/bin"
 
-catalogs=(cassandra elastic hive iceberg mysql)
+catalogs=(scylla elastic hive iceberg mysql)
 for catalog in "${catalogs[@]}"; do
     echo "Querying catalog: $catalog"
     mkdir -p "$datadir/cli/query"

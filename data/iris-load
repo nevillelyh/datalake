@@ -30,4 +30,4 @@ curl --user elastic:elasticpass \
     -H "Content-Type: application/json" --data-binary "@$datadir/iris/iris.json"
 
 "$bindir/scylla" cli --execute="CREATE KEYSPACE IF NOT EXISTS iris WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };"
-"$bindir/trino" cli --execute="CREATE TABLE IF NOT EXISTS cassandra.iris.iris AS SELECT * FROM hive.iris.iris;"
+"$bindir/trino" cli --execute="CREATE TABLE IF NOT EXISTS scylla.iris.iris AS SELECT * FROM hive.iris.iris;"
