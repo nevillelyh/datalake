@@ -1,6 +1,8 @@
+/.beeline
+/.cassandra
 /client/.bsp
 /client/.idea
-/.beeline
 /.mysql_history
+/.sdkmanrc
 /.trino_history
 target
