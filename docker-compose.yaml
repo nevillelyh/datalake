@@ -64,6 +64,42 @@ services:
       - ./scripts:/home/hive/scripts:ro
     command: /home/hive/scripts/metastore.sh
 
+  crdb1:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb1.datalake.io
+    ports:
+      - 26257:26257
+      - 8081:8080
+    volumes:
+      - ./data/crdb1:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
+  crdb2:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb2.datalake.io
+    volumes:
+      - ./data/crdb2:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
+  crdb3:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb3.datalake.io
+    volumes:
+      - ./data/crdb3:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
+
+  crdb-init:
+    image: cockroachdb/cockroach:latest
+    depends_on:
+      - crdb1
+      - crdb2
+      - crdb3
+    volumes:
+      - ./scripts:/root/scripts:ro
+    entrypoint: /bin/bash
+    command: /root/scripts/crdb.sh
+
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
     hostname: elastic.datalake.io

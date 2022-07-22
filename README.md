@@ -29,6 +29,7 @@ docker compose down
 - metastore-hive - Hive Metastore
 - metastore-iceberg - Iceberg Metastore
 - elastic - Elasticsearch
+- crdb1,crdb2,crdb3 - CockroachDB cluster
 - scylla - Scylla
 - trino - Trino
 
@@ -63,6 +64,7 @@ bin/aws s3 sync --delete s3://datalake s3
 - 9001: MinIO console
 - 3306: mysql
 - 8080: Trino Web UI, HTTP
+- 8081: CockroachDB Web UI, HTTP
 - 8443: Trino Web UI, HTTPS
 - 9042: Scylla CQL native transport
 - 9080: Trino JMX RMI registry
@@ -70,6 +72,7 @@ bin/aws s3 sync --delete s3://datalake s3
 - 9200: Elasticsearch HTTP
 - 9200: Elasticsearch transport
 - 12345: JMX exporter
+- 26257: CockroachDB transport
 
 # Authentication
 

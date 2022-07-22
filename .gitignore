@@ -2,6 +2,7 @@
 /.cassandra
 /client/.bsp
 /client/.idea
+/.cockroachsql_history
 /.mysql_history
 /.sdkmanrc
 /.trino_history
