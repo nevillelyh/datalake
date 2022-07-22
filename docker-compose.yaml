@@ -1,12 +1,13 @@
 services:
   minio:
-    build: minio
+    image: minio/minio:latest
     hostname: minio.datalake.io
     ports:
       - 9000:9000
       - 9001:9001
     volumes:
       - ./data/minio:/data:rw
+    user: "${UID}:${GID}"
     command: server /data --console-address ":9001"
   mc:
     image: minio/mc:latest

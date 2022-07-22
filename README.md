@@ -10,6 +10,9 @@ Playground for Datalake projects.
 cd plugin
 ./gradlew jar
 
+# Set UID/GID environment variables
+source env.sh
+
 # Start everything
 docker compose up
 
