@@ -14,6 +14,17 @@ help() {
     exit 1
 }
 
+crdb_cli() {
+    tag="cockroachdb/cockroach:latest"
+    docker run -it --rm --name "crdb-cli-$ts" --network "$net" \
+        --volume "$basedir/data/cli:/tmp/cli:ro" \
+        --volume "$basedir:/home/datalake:rw" \
+        --user "$(id --user)" \
+        --env HOME=/home/datalake \
+        --workdir /home/datalake \
+        "$tag" sql --insecure --host crdb1.datalake.io "$@"
+}
+
 metastore_cli() {
     service="$1"
     shift
@@ -88,6 +99,7 @@ fi
 case "$1" in
     bash)
         shift
+        [[ "$bin" == "crdb" ]] && bin="crdb1"
         docker exec -it "$project-$bin-1" /bin/bash "$@"
         ;;
     cli)

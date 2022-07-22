@@ -19,106 +19,140 @@ services:
     entrypoint: /bin/bash
     command: /root/scripts/minio.sh
 
-  mysql:
-    image: mysql:latest
-    hostname: mysql.datalake.io
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_ROOT_PASSWORD: mysqlpass
-    command: --bind-address=0.0.0.0
+#  mysql:
+#    image: mysql:latest
+#    hostname: mysql.datalake.io
+#    ports:
+#      - 3306:3306
+#    environment:
+#      MYSQL_ROOT_PASSWORD: mysqlpass
+#    command: --bind-address=0.0.0.0
+#
+#  mysql-init:
+#    image: mysql:latest
+#    depends_on:
+#      - mysql
+#    hostname: mysql-init.datalake.io
+#    volumes:
+#      - ./scripts:/root/scripts:ro
+#    command: /root/scripts/mysql-init.sh
+#
+#  metastore-hive:
+#    build: metastore
+#    depends_on:
+#      mysql-init:
+#        condition: service_completed_successfully
+#    hostname: metastore-hive.datalake.io
+#    ports:
+#      - 9083:9083
+#    volumes:
+#      - ./metastore/hadoop/etc/hadoop:/home/hive/hadoop/etc/hadoop:ro
+#      - ./metastore/hive/conf:/home/hive/hive/conf:ro
+#      - ./scripts:/home/hive/scripts:ro
+#    command: /home/hive/scripts/metastore.sh
+#  metastore-iceberg:
+#    build: metastore
+#    depends_on:
+#      mysql-init:
+#        condition: service_completed_successfully
+#    hostname: metastore-iceberg.datalake.io
+#    ports:
+#      - 9084:9083
+#    volumes:
+#      - ./metastore/hadoop/etc/hadoop:/home/hive/hadoop/etc/hadoop:ro
+#      - ./metastore/iceberg/conf:/home/hive/hive/conf:ro
+#      - ./scripts:/home/hive/scripts:ro
+#    command: /home/hive/scripts/metastore.sh
 
-  mysql-init:
-    image: mysql:latest
-    depends_on:
-      - mysql
-    hostname: mysql-init.datalake.io
-    volumes:
-      - ./scripts:/root/scripts:ro
-    command: /root/scripts/mysql-init.sh
-
-  metastore-hive:
-    build: metastore
-    depends_on:
-      mysql-init:
-        condition: service_completed_successfully
-    hostname: metastore-hive.datalake.io
+  crdb1:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb1.datalake.io
     ports:
-      - 9083:9083
-    volumes:
-      - ./metastore/hadoop/etc/hadoop:/home/hive/hadoop/etc/hadoop:ro
-      - ./metastore/hive/conf:/home/hive/hive/conf:ro
-      - ./scripts:/home/hive/scripts:ro
-    command: /home/hive/scripts/metastore.sh
-  metastore-iceberg:
-    build: metastore
-    depends_on:
-      mysql-init:
-        condition: service_completed_successfully
-    hostname: metastore-iceberg.datalake.io
-    ports:
-      - 9084:9083
-    volumes:
-      - ./metastore/hadoop/etc/hadoop:/home/hive/hadoop/etc/hadoop:ro
-      - ./metastore/iceberg/conf:/home/hive/hive/conf:ro
-      - ./scripts:/home/hive/scripts:ro
-    command: /home/hive/scripts/metastore.sh
-
-  elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
-    hostname: elastic.datalake.io
-    ports:
-      - 9200:9200
-      - 9300:9300
-    environment:
-      ELASTIC_PASSWORD: elasticpass
-      xpack.security.enabled: true
-      discovery.type: single-node
-
-  scylla:
-    image: scylladb/scylla
-    hostname: scylla.datalake.io
-    ports:
-      - 9042:9042
-
-  trino:
-    image: trinodb/trino:latest
-    depends_on:
-      metastore-hive:
-        condition: service_started
-      metastore-iceberg:
-        condition: service_started
-      minio:
-        condition: service_started
-      mysql-init:
-        condition: service_completed_successfully
-      elastic:
-        condition: service_started
-      scylla:
-        condition: service_started
-    hostname: trino.datalake.io
-    ports:
+      - 26257:26257
       - 8080:8080
-      - 8443:8443
-      - 9080:9080
-      - 9081:9081
     volumes:
-      - ./trino/etc/trino:/etc/trino:ro
-      - ./scripts:/home/trino/scripts:ro
-      - ./plugin/lib/build/libs:/lib/trino/plugin/datalake:ro
-    command: /home/trino/scripts/trino.sh
-    deploy:
-      resources:
-        limits:
-          memory: 4G
+      - ./data/crdb1:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
+  crdb2:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb2.datalake.io
+    volumes:
+      - ./data/crdb2:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
+  crdb3:
+    image: cockroachdb/cockroach:latest
+    hostname: crdb3.datalake.io
+    volumes:
+      - ./data/crdb3:/cockroach/cockroach-data:rw
+    user: "${UID}:${GID}"
+    command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
 
-  jmx-exporter:
-    image: openjdk:8-jre-buster
+  crdb-init:
+    image: cockroachdb/cockroach:latest
     depends_on:
-      - trino
-    hostname: jmx-exporter.datalake.io
-    ports:
-      - 12345:12345
-    volumes:
-      - ./scripts:/root/scripts:ro
-    command: /root/scripts/jmx-exporter.sh
+      - crdb1
+      - crdb2
+      - crdb3
+    hostname: crdb-init.datalake.io
+    command: init --insecure --host crdb1.datalake.io
+
+#  elastic:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+#    hostname: elastic.datalake.io
+#    ports:
+#      - 9200:9200
+#      - 9300:9300
+#    environment:
+#      ELASTIC_PASSWORD: elasticpass
+#      xpack.security.enabled: true
+#      discovery.type: single-node
+#
+#  scylla:
+#    image: scylladb/scylla
+#    hostname: scylla.datalake.io
+#    ports:
+#      - 9042:9042
+#
+#  trino:
+#    image: trinodb/trino:latest
+#    depends_on:
+#      metastore-hive:
+#        condition: service_started
+#      metastore-iceberg:
+#        condition: service_started
+#      minio:
+#        condition: service_started
+#      mysql-init:
+#        condition: service_completed_successfully
+#      elastic:
+#        condition: service_started
+#      scylla:
+#        condition: service_started
+#    hostname: trino.datalake.io
+#    ports:
+#      - 8080:8080
+#      - 8443:8443
+#      - 9080:9080
+#      - 9081:9081
+#    volumes:
+#      - ./trino/etc/trino:/etc/trino:ro
+#      - ./scripts:/home/trino/scripts:ro
+#      - ./plugin/lib/build/libs:/lib/trino/plugin/datalake:ro
+#    command: /home/trino/scripts/trino.sh
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 4G
+#
+#  jmx-exporter:
+#    image: openjdk:8-jre-buster
+#    depends_on:
+#      - trino
+#    hostname: jmx-exporter.datalake.io
+#    ports:
+#      - 12345:12345
+#    volumes:
+#      - ./scripts:/root/scripts:ro
+#    command: /root/scripts/jmx-exporter.sh
