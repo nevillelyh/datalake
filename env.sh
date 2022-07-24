@@ -1,2 +1,4 @@
-export UID
-export GID
+uid=$(id -u)
+gid=$(id -g)
+export uid
+export gid

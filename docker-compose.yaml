@@ -7,7 +7,7 @@ services:
       - 9001:9001
     volumes:
       - ./data/minio:/data:rw
-    user: "${UID}:${GID}"
+    user: "${uid}:${gid}"
     command: server /data --console-address ":9001"
   mc:
     image: minio/mc:latest
@@ -72,21 +72,21 @@ services:
       - 8081:8080
     volumes:
       - ./data/crdb1:/cockroach/cockroach-data:rw
-    user: "${UID}:${GID}"
+    user: "${uid}:${gid}"
     command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
   crdb2:
     image: cockroachdb/cockroach:latest
     hostname: crdb2.datalake.io
     volumes:
       - ./data/crdb2:/cockroach/cockroach-data:rw
-    user: "${UID}:${GID}"
+    user: "${uid}:${gid}"
     command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
   crdb3:
     image: cockroachdb/cockroach:latest
     hostname: crdb3.datalake.io
     volumes:
       - ./data/crdb3:/cockroach/cockroach-data:rw
-    user: "${UID}:${GID}"
+    user: "${uid}:${gid}"
     command: start --insecure --join=crdb1.datalake.io,crdb2.datalake.io,crdb3.datalake.io
 
   crdb-init:
